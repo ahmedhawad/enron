@@ -14,9 +14,10 @@ from textblob import TextBlob
 import re
 import networkx as nx
 import matplotlib.pyplot as plt
+from collections import Counter
 
 ###
-file_location = "enron/enron_emails.csv" #update to ur file ocation
+file_location = "emails.csv" #update to ur file ocation
 number_of_records = 500
 ###
 
@@ -85,7 +86,11 @@ headers = ['Message-ID: ', 'Date: ', 'From: ', 'To: ', 'Subject: ']
 for i, v in enumerate(headers):
     data = standard_format(data, data.message, v, i)
 data = data.reset_index()
+
+#print(data)
 # print("Got rid of {} useless emails! That's {}% of the total number of messages in this dataset.".format(x - len(data.index), np.round(((x - len(data.index)) / x) * 100, decimals=2)))
+##help(data)
+
 
 
 data['text'] = get_text(data.message, 15)
@@ -93,6 +98,38 @@ data['date'] = get_row(data.message, 1)
 data['senders'] = get_row(data.message, 2)
 data['recipients'] = get_row(data.message, 3)
 data['subject'] = get_row(data.message, 4)
+
+print(data['date'])
+#Beneath is a way to count up the number of times each person was sent an email so we can see who the most popular are.
+#Maybe we could compare time intervals to see how the most popular people change
+
+recipients_count={}
+for i in data['recipients']:
+    r=i[4:]
+    if r in recipients_count.keys():
+        recipients_count[r.split(',')[0]] +=1
+    else:
+        recipients_count[r.split(',')[0]] =1
+
+
+c=Counter(recipients_count)
+shortened= c.most_common()[:15]
+names=[]
+occurs=[]
+for i in shortened:
+    names.append(i[0])
+    occurs.append(i[1])
+
+
+plt.bar(names,occurs)
+plt.xticks(rotation=90)
+
+plt.tight_layout()
+plt.show()
+
+
+
+
 
 data.date = data.date.str.replace('Date: ', '')
 data.date = pd.to_datetime(data.date)
@@ -110,7 +147,7 @@ del data['message']
 data = data[['date', 'sender', 'recipient1', 'recipient2', 'recipient3', 'subject', 'text']]
 
 
-  
+
 
 positive = negative = neutral = 0
 
